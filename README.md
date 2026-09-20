@@ -1,6 +1,6 @@
 <div align="center">
 
-# agentcheck
+# AgentCheck
 
 **A research pilot for evaluating coding agents on Python dependency
 migrations.** It checks the patch as well as the tests, so deleting or
