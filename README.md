@@ -1,8 +1,10 @@
+<div align="center">
+
 # agentcheck
 
-A research pilot for evaluating coding agents on Python dependency migrations.
-It checks the patch as well as the tests, so deleting or weakening tests does
-not count as a clean repair.
+**A research pilot for evaluating coding agents on Python dependency
+migrations.** It checks the patch as well as the tests, so deleting or
+weakening tests does not count as a clean repair.
 
 [![ci](https://github.com/Aminembarek2/agentcheck/actions/workflows/ci.yml/badge.svg)](https://github.com/Aminembarek2/agentcheck/actions/workflows/ci.yml)
 [![python](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/)
@@ -11,6 +13,13 @@ not count as a clean repair.
 [Results](RESULTS.md) · [Findings](docs/findings.md) ·
 [Judge calibration](docs/judge-calibration.md) ·
 [Limitations](docs/threats-to-validity.md)
+
+</div>
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/figures/architecture-dark.svg">
+  <img alt="How agentcheck works: a pinned repo whose tests already fail, an agent that reads and edits it in a sandbox with no network, the patch it leaves on disk, and a scorer that compares that patch to the maintainer's real fix. One recorded run reported 115 passed and 0 failed while having deleted 56 test functions, scoring 0% credible progress." src="docs/figures/architecture-light.svg">
+</picture>
 
 **Status: pilot closed on September 20, 2026.** The harness, recorded runs and
 calibration results are available for inspection and reuse. Further paid
@@ -47,6 +56,11 @@ They failed the registered calibration threshold and their patch verdicts
 are not used as validated quality scores.
 
 ## Results
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/figures/results-dark.svg">
+  <img alt="Across 122 runs: on the sqlalchemy task at 40 iterations the agent solved 0 of 28 runs while 15 of its 27 patches were flagged. Two LLM judges reached 91% raw agreement with a human and a Gwet's AC1 of 0.91, but Cohen's kappa of 0.00, because they called every patch deficient. Share of patches flagged by iteration budget on one model and one route: no patches at 5 iterations, 0% of 2 at 15, 56% of 27 at 40, 71% of 7 at 100. No causal effect of budget is claimed." src="docs/figures/results-light.svg">
+</picture>
 
 <!-- generated: status -->
 Where it stands today: **2 models** (under 3 route or snapshot ids), **3 tasks**, **122 loadable run records** across 15 configurations, n=1–20 per configuration. The judge: 48 pair(s) hand-labelled.

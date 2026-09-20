@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 470" width="980" height="470" role="img" aria-label="Results: on one task the agent solved 0 of 28 runs while 15 of 28 were flagged for gaming the tests; and two LLM judges scored 91 percent raw agreement with a human but Cohen's kappa of 0.00"><defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#898781"/></marker></defs><rect x="0" y="0" width="980" height="470" rx="0" fill="#fcfcfb"/>
+<text x="32" y="44" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="19" font-weight="700" fill="#0b0b0b" text-anchor="start">What 122 runs showed</text>
+<text x="32" y="68" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="400" fill="#52514e" text-anchor="start">One agent model, three dependency migrations, n = 8–28 per configuration.</text>
+<rect x="32" y="92" width="452" height="166" rx="10" fill="#f4f3ee" stroke="#d6d5cd" stroke-width="1.5"/>
+<text x="54" y="122" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11.5" font-weight="700" fill="#d94f2b" text-anchor="start" letter-spacing="0.6">NOT ONE CLEAN REPAIR</text>
+<text x="54" y="168" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="46" font-weight="700" fill="#0b0b0b" text-anchor="start">0</text>
+<text x="96" y="168" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="400" fill="#52514e" text-anchor="start">of 28 runs solved it</text>
+<text x="54" y="214" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="46" font-weight="700" fill="#d94f2b" text-anchor="start">15</text>
+<text x="118" y="214" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="400" fill="#52514e" text-anchor="start">of 27 patches flagged</text>
+<text x="54" y="240" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#898781" text-anchor="start">sqlalchemy 1.4 → 2.0, 40 iterations. One run left no patch at all.</text>
+<rect x="508" y="92" width="440" height="166" rx="10" fill="#f4f3ee" stroke="#d6d5cd" stroke-width="1.5"/>
+<text x="530" y="122" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11.5" font-weight="700" fill="#2a78d6" text-anchor="start" letter-spacing="0.6">THE JUDGE LOOKED ACCURATE. IT WASN'T.</text>
+<text x="530" y="156" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="400" fill="#52514e" text-anchor="start">Raw agreement with a human</text>
+<text x="926" y="156" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="16" font-weight="600" fill="#52514e" text-anchor="end">91%</text>
+<text x="530" y="186" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="400" fill="#52514e" text-anchor="start">Gwet's AC1</text>
+<text x="926" y="186" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="16" font-weight="600" fill="#52514e" text-anchor="end">0.91</text>
+<text x="530" y="216" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="400" fill="#52514e" text-anchor="start">Cohen's kappa</text>
+<text x="926" y="216" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="19" font-weight="700" fill="#d94f2b" text-anchor="end">0.00</text>
+<text x="530" y="240" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#898781" text-anchor="start">It called every patch deficient. A constant rater scores 0, correctly.</text>
+<rect x="32" y="278" width="916" height="122" rx="10" fill="#fcfcfb" stroke="#d6d5cd" stroke-width="1.5"/>
+<text x="54" y="306" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="650" fill="#0b0b0b" text-anchor="start">Share of PATCHES flagged, by iteration budget (sqlalchemy task, one model, one route)</text>
+<rect x="54" y="328" width="160" height="52" rx="5" fill="#f4f3ee"/>
+<text x="134.0" y="320" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="700" fill="#898781" text-anchor="middle">no patches</text>
+<text x="134.0" y="396" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#52514e" text-anchor="middle">5 it · 8 runs</text>
+<rect x="266" y="328" width="160" height="52" rx="5" fill="#f4f3ee"/>
+<text x="346.0" y="320" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="700" fill="#898781" text-anchor="middle">0%</text>
+<text x="346.0" y="396" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#52514e" text-anchor="middle">15 it · 2 patches</text>
+<rect x="478" y="328" width="160" height="52" rx="5" fill="#f4f3ee"/>
+<rect x="478" y="351" width="160" height="29" rx="5" fill="#d94f2b"/>
+<text x="558.0" y="320" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="700" fill="#0b0b0b" text-anchor="middle">56%</text>
+<text x="558.0" y="396" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#52514e" text-anchor="middle">40 it · 27 patches</text>
+<rect x="690" y="328" width="160" height="52" rx="5" fill="#f4f3ee"/>
+<rect x="690" y="343" width="160" height="37" rx="5" fill="#d94f2b"/>
+<text x="770.0" y="320" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="700" fill="#0b0b0b" text-anchor="middle">71%</text>
+<text x="770.0" y="396" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#52514e" text-anchor="middle">100 it · 7 patches</text>
+<text x="32" y="428" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#898781" text-anchor="start">Descriptive across recorded settings. Small denominators at 15 and 100 iterations; no causal effect of budget is claimed.</text>
+<text x="32" y="448" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#898781" text-anchor="start">Every figure regenerates from the run records; CI fails if this repo's numbers drift from its data.</text>
+</svg>

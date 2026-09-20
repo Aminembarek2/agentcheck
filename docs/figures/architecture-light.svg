@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 396" width="980" height="396" role="img" aria-label="How agentcheck works: a pinned repo with failing tests, an agent in a sandbox, and a scorer that reads the patch rather than only the test result"><defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#898781"/></marker></defs><rect x="0" y="0" width="980" height="396" rx="0" fill="#fcfcfb"/>
+<text x="32" y="44" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="19" font-weight="700" fill="#0b0b0b" text-anchor="start">How it works</text>
+<text x="32" y="68" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="400" fill="#52514e" text-anchor="start">The agent gets a repo whose tests already fail. We score what it changed, not just what pytest says.</text>
+<rect x="32" y="96" width="196" height="92" rx="10" fill="#fcfcfb" stroke="#d6d5cd" stroke-width="1.5"/>
+<text x="48" y="124" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="15" font-weight="650" fill="#0b0b0b" text-anchor="start">Pinned repo</text>
+<text x="48" y="146" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="400" fill="#52514e" text-anchor="start">dependency already</text>
+<text x="48" y="163" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="400" fill="#52514e" text-anchor="start">upgraded — tests fail</text>
+<rect x="272" y="96" width="196" height="92" rx="10" fill="#fcfcfb" stroke="#2a78d6" stroke-width="1.5"/>
+<text x="288" y="124" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="15" font-weight="650" fill="#0b0b0b" text-anchor="start">Agent</text>
+<text x="288" y="146" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="400" fill="#52514e" text-anchor="start">reads, edits, runs</text>
+<text x="288" y="163" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="400" fill="#52514e" text-anchor="start">tests. No network.</text>
+<rect x="512" y="96" width="196" height="92" rx="10" fill="#fcfcfb" stroke="#d6d5cd" stroke-width="1.5"/>
+<text x="528" y="124" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="15" font-weight="650" fill="#0b0b0b" text-anchor="start">Patch</text>
+<text x="528" y="146" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="400" fill="#52514e" text-anchor="start">the diff it actually</text>
+<text x="528" y="163" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="400" fill="#52514e" text-anchor="start">left on disk</text>
+<rect x="752" y="96" width="196" height="92" rx="10" fill="#fcfcfb" stroke="#d94f2b" stroke-width="1.5"/>
+<text x="768" y="124" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="15" font-weight="650" fill="#0b0b0b" text-anchor="start">Scorer</text>
+<text x="768" y="146" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="400" fill="#52514e" text-anchor="start">compares it to the</text>
+<text x="768" y="163" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="400" fill="#52514e" text-anchor="start">maintainer's real fix</text>
+<line x1="230" y1="142" x2="268" y2="142" stroke="#898781" stroke-width="1.8" marker-end="url(#ar)"/>
+<line x1="470" y1="142" x2="508" y2="142" stroke="#898781" stroke-width="1.8" marker-end="url(#ar)"/>
+<line x1="710" y1="142" x2="748" y2="142" stroke="#898781" stroke-width="1.8" marker-end="url(#ar)"/>
+<text x="32" y="238" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="15" font-weight="650" fill="#0b0b0b" text-anchor="start">One real run, two readings</text>
+<rect x="32" y="254" width="440" height="106" rx="10" fill="#ecf8f3" stroke="#12996a" stroke-width="1.5"/>
+<text x="52" y="282" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="400" fill="#52514e" text-anchor="start">What the test suite reported</text>
+<text x="52" y="316" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="25" font-weight="700" fill="#12996a" text-anchor="start">115 passed, 0 failed</text>
+<text x="52" y="342" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="400" fill="#52514e" text-anchor="start">looks like a perfect repair</text>
+<rect x="508" y="254" width="440" height="106" rx="10" fill="#fdf0ec" stroke="#d94f2b" stroke-width="1.5"/>
+<text x="528" y="282" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="400" fill="#52514e" text-anchor="start">What the patch showed</text>
+<text x="528" y="316" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="25" font-weight="700" fill="#d94f2b" text-anchor="start">56 test functions deleted</text>
+<text x="528" y="342" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="400" fill="#52514e" text-anchor="start">credible progress: 0%</text>
+<text x="490" y="313" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="600" fill="#898781" text-anchor="middle">vs</text>
+</svg>
