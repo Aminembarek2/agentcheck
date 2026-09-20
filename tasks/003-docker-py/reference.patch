@@ -1,0 +1,140 @@
+diff --git a/docker/transport/npipeconn.py b/docker/transport/npipeconn.py
+index 87033cf2af..45988b2df1 100644
+--- a/docker/transport/npipeconn.py
++++ b/docker/transport/npipeconn.py
+@@ -5,17 +5,13 @@
+ from .. import constants
+ from .npipesocket import NpipeSocket
+ 
+-import http.client as httplib
+-
+-try:
+-    import requests.packages.urllib3 as urllib3
+-except ImportError:
+-    import urllib3
++import urllib3
++import urllib3.connection
+ 
+ RecentlyUsedContainer = urllib3._collections.RecentlyUsedContainer
+ 
+ 
+-class NpipeHTTPConnection(httplib.HTTPConnection):
++class NpipeHTTPConnection(urllib3.connection.HTTPConnection):
+     def __init__(self, npipe_path, timeout=60):
+         super().__init__(
+             'localhost', timeout=timeout
+diff --git a/docker/transport/sshconn.py b/docker/transport/sshconn.py
+index 7421f33bdc..a92beb621f 100644
+--- a/docker/transport/sshconn.py
++++ b/docker/transport/sshconn.py
+@@ -11,12 +11,8 @@
+ from docker.transport.basehttpadapter import BaseHTTPAdapter
+ from .. import constants
+ 
+-import http.client as httplib
+-
+-try:
+-    import requests.packages.urllib3 as urllib3
+-except ImportError:
+-    import urllib3
++import urllib3
++import urllib3.connection
+ 
+ RecentlyUsedContainer = urllib3._collections.RecentlyUsedContainer
+ 
+@@ -99,7 +95,7 @@ def close(self):
+         self.proc.terminate()
+ 
+ 
+-class SSHConnection(httplib.HTTPConnection):
++class SSHConnection(urllib3.connection.HTTPConnection):
+     def __init__(self, ssh_transport=None, timeout=60, host=None):
+         super().__init__(
+             'localhost', timeout=timeout
+diff --git a/docker/transport/ssladapter.py b/docker/transport/ssladapter.py
+index 6aa80037d7..69274bd1dd 100644
+--- a/docker/transport/ssladapter.py
++++ b/docker/transport/ssladapter.py
+@@ -7,10 +7,7 @@
+ 
+ from docker.transport.basehttpadapter import BaseHTTPAdapter
+ 
+-try:
+-    import requests.packages.urllib3 as urllib3
+-except ImportError:
+-    import urllib3
++import urllib3
+ 
+ 
+ PoolManager = urllib3.poolmanager.PoolManager
+diff --git a/docker/transport/unixconn.py b/docker/transport/unixconn.py
+index 1b00762a60..fae10f2664 100644
+--- a/docker/transport/unixconn.py
++++ b/docker/transport/unixconn.py
+@@ -1,20 +1,17 @@
+ import requests.adapters
+ import socket
+-import http.client as httplib
+ 
+ from docker.transport.basehttpadapter import BaseHTTPAdapter
+ from .. import constants
+ 
+-try:
+-    import requests.packages.urllib3 as urllib3
+-except ImportError:
+-    import urllib3
++import urllib3
++import urllib3.connection
+ 
+ 
+ RecentlyUsedContainer = urllib3._collections.RecentlyUsedContainer
+ 
+ 
+-class UnixHTTPConnection(httplib.HTTPConnection):
++class UnixHTTPConnection(urllib3.connection.HTTPConnection):
+ 
+     def __init__(self, base_url, unix_socket, timeout=60):
+         super().__init__(
+@@ -30,12 +27,6 @@ def connect(self):
+         sock.connect(self.unix_socket)
+         self.sock = sock
+ 
+-    def putheader(self, header, *values):
+-        super().putheader(header, *values)
+-
+-    def response_class(self, sock, *args, **kwargs):
+-        return httplib.HTTPResponse(sock, *args, **kwargs)
+-
+ 
+ class UnixHTTPConnectionPool(urllib3.connectionpool.HTTPConnectionPool):
+     def __init__(self, base_url, socket_path, timeout=60, maxsize=10):
+diff --git a/docker/types/daemon.py b/docker/types/daemon.py
+index 10e8101447..096b2cc169 100644
+--- a/docker/types/daemon.py
++++ b/docker/types/daemon.py
+@@ -1,9 +1,6 @@
+ import socket
+ 
+-try:
+-    import requests.packages.urllib3 as urllib3
+-except ImportError:
+-    import urllib3
++import urllib3
+ 
+ from ..errors import DockerException
+ 
+diff --git a/tests/unit/api_test.py b/tests/unit/api_test.py
+index a2348f08ba..4b6099c904 100644
+--- a/tests/unit/api_test.py
++++ b/tests/unit/api_test.py
+@@ -16,9 +16,9 @@
+ import docker
+ import pytest
+ import requests
++import urllib3
+ from docker.api import APIClient
+ from docker.constants import DEFAULT_DOCKER_API_VERSION
+-from requests.packages import urllib3
+ from unittest import mock
+ 
+ from . import fake_api

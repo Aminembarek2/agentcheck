@@ -1,0 +1,429 @@
+diff --git a/.github/workflows/build.yml b/.github/workflows/build.yml
+index fec42fa0..52cb217d 100644
+--- a/.github/workflows/build.yml
++++ b/.github/workflows/build.yml
+@@ -4,7 +4,7 @@ on: [push, pull_request]
+ 
+ jobs:
+ 
+-  test:
++  lint:
+     runs-on: ubuntu-latest
+     strategy:
+       matrix:
+@@ -20,13 +20,29 @@ jobs:
+       run: |
+         python -m pip install --upgrade pip
+         pip install hatch
+-        hatch env create
+     - name: Lint and typecheck
+       run: |
+         hatch run lint-check
++
++  test:
++    runs-on: ubuntu-latest
++    strategy:
++      matrix:
++        python_version: [3.8, 3.9, '3.10', '3.11']
++
++    steps:
++    - uses: actions/checkout@v3
++    - name: Set up Python
++      uses: actions/setup-python@v4
++      with:
++        python-version: ${{ matrix.python_version }}
++    - name: Install dependencies
++      run: |
++        python -m pip install --upgrade pip
++        pip install hatch
+     - name: Test
+       run: |
+-        hatch run test-cov-xml
++        hatch run test:test-cov-xml
+     - uses: codecov/codecov-action@v3
+       with:
+         token: ${{ secrets.CODECOV_TOKEN }}
+@@ -40,7 +56,7 @@ jobs:
+ 
+   release:
+     runs-on: ubuntu-latest
+-    needs: test
++    needs: [lint, test]
+     if: startsWith(github.ref, 'refs/tags/')
+ 
+     steps:
+diff --git a/fastapi_users/authentication/transport/bearer.py b/fastapi_users/authentication/transport/bearer.py
+index d060720b..7dc6d823 100644
+--- a/fastapi_users/authentication/transport/bearer.py
++++ b/fastapi_users/authentication/transport/bearer.py
+@@ -8,6 +8,7 @@
+     TransportLogoutNotSupportedError,
+ )
+ from fastapi_users.openapi import OpenAPIResponseType
++from fastapi_users.schemas import model_dump
+ 
+ 
+ class BearerResponse(BaseModel):
+@@ -23,7 +24,7 @@ def __init__(self, tokenUrl: str):
+ 
+     async def get_login_response(self, token: str) -> Response:
+         bearer_response = BearerResponse(access_token=token, token_type="bearer")
+-        return JSONResponse(bearer_response.dict())
++        return JSONResponse(model_dump(bearer_response))
+ 
+     async def get_logout_response(self) -> Response:
+         raise TransportLogoutNotSupportedError()
+diff --git a/fastapi_users/router/oauth.py b/fastapi_users/router/oauth.py
+index cf43c9c4..9300c603 100644
+--- a/fastapi_users/router/oauth.py
++++ b/fastapi_users/router/oauth.py
+@@ -267,6 +267,6 @@ async def callback(
+             request,
+         )
+ 
+-        return user_schema.from_orm(user)
++        return schemas.model_validate(user_schema, user)
+ 
+     return router
+diff --git a/fastapi_users/router/register.py b/fastapi_users/router/register.py
+index a6d84543..33facd46 100644
+--- a/fastapi_users/router/register.py
++++ b/fastapi_users/router/register.py
+@@ -71,6 +71,6 @@ async def register(
+                 },
+             )
+ 
+-        return user_schema.from_orm(created_user)
++        return schemas.model_validate(user_schema, created_user)
+ 
+     return router
+diff --git a/fastapi_users/router/users.py b/fastapi_users/router/users.py
+index e2c9d771..19e04066 100644
+--- a/fastapi_users/router/users.py
++++ b/fastapi_users/router/users.py
+@@ -48,7 +48,7 @@ async def get_user_or_404(
+     async def me(
+         user: models.UP = Depends(get_current_active_user),
+     ):
+-        return user_schema.from_orm(user)
++        return schemas.model_validate(user_schema, user)
+ 
+     @router.patch(
+         "/me",
+@@ -96,7 +96,7 @@ async def update_me(
+             user = await user_manager.update(
+                 user_update, user, safe=True, request=request
+             )
+-            return user_schema.from_orm(user)
++            return schemas.model_validate(user_schema, user)
+         except exceptions.InvalidPasswordException as e:
+             raise HTTPException(
+                 status_code=status.HTTP_400_BAD_REQUEST,
+@@ -129,7 +129,7 @@ async def update_me(
+         },
+     )
+     async def get_user(user=Depends(get_user_or_404)):
+-        return user_schema.from_orm(user)
++        return schemas.model_validate(user_schema, user)
+ 
+     @router.patch(
+         "/{id}",
+@@ -183,7 +183,7 @@ async def update_user(
+             user = await user_manager.update(
+                 user_update, user, safe=False, request=request
+             )
+-            return user_schema.from_orm(user)
++            return schemas.model_validate(user_schema, user)
+         except exceptions.InvalidPasswordException as e:
+             raise HTTPException(
+                 status_code=status.HTTP_400_BAD_REQUEST,
+diff --git a/fastapi_users/router/verify.py b/fastapi_users/router/verify.py
+index f74d9fe7..299bdc19 100644
+--- a/fastapi_users/router/verify.py
++++ b/fastapi_users/router/verify.py
+@@ -70,7 +70,7 @@ async def verify(
+     ):
+         try:
+             user = await user_manager.verify(token, request)
+-            return user_schema.from_orm(user)
++            return schemas.model_validate(user_schema, user)
+         except (exceptions.InvalidVerifyToken, exceptions.UserNotExists):
+             raise HTTPException(
+                 status_code=status.HTTP_400_BAD_REQUEST,
+diff --git a/fastapi_users/schemas.py b/fastapi_users/schemas.py
+index 79cb8901..1a618410 100644
+--- a/fastapi_users/schemas.py
++++ b/fastapi_users/schemas.py
+@@ -1,13 +1,35 @@
+-from typing import Generic, List, Optional, TypeVar
++from typing import Any, Dict, Generic, List, Optional, Type, TypeVar
+ 
+-from pydantic import BaseModel, EmailStr
++from pydantic import BaseModel, ConfigDict, EmailStr
++from pydantic.version import VERSION as PYDANTIC_VERSION
+ 
+ from fastapi_users import models
+ 
++PYDANTIC_V2 = PYDANTIC_VERSION.startswith("2.")
++
++SCHEMA = TypeVar("SCHEMA", bound=BaseModel)
++
++if PYDANTIC_V2:  # pragma: no cover
++
++    def model_dump(model: BaseModel, *args, **kwargs) -> Dict[str, Any]:
++        return model.model_dump(*args, **kwargs)  # type: ignore
++
++    def model_validate(schema: Type[SCHEMA], obj: Any, *args, **kwargs) -> SCHEMA:
++        return schema.model_validate(obj, *args, **kwargs)  # type: ignore
++
++else:  # pragma: no cover  # type: ignore
++
++    def model_dump(model: BaseModel, *args, **kwargs) -> Dict[str, Any]:
++        return model.dict(*args, **kwargs)  # type: ignore
++
++    def model_validate(schema: Type[SCHEMA], obj: Any, *args, **kwargs) -> SCHEMA:
++        return schema.from_orm(obj)  # type: ignore
++
+ 
+ class CreateUpdateDictModel(BaseModel):
+     def create_update_dict(self):
+-        return self.dict(
++        return model_dump(
++            self,
+             exclude_unset=True,
+             exclude={
+                 "id",
+@@ -19,10 +41,10 @@ def create_update_dict(self):
+         )
+ 
+     def create_update_dict_superuser(self):
+-        return self.dict(exclude_unset=True, exclude={"id"})
++        return model_dump(self, exclude_unset=True, exclude={"id"})
+ 
+ 
+-class BaseUser(Generic[models.ID], CreateUpdateDictModel):
++class BaseUser(CreateUpdateDictModel, Generic[models.ID]):
+     """Base User model."""
+ 
+     id: models.ID
+@@ -31,8 +53,12 @@ class BaseUser(Generic[models.ID], CreateUpdateDictModel):
+     is_superuser: bool = False
+     is_verified: bool = False
+ 
+-    class Config:
+-        orm_mode = True
++    if PYDANTIC_V2:  # pragma: no cover
++        model_config = ConfigDict(from_attributes=True)  # type: ignore
++    else:  # pragma: no cover
++
++        class Config:
++            orm_mode = True
+ 
+ 
+ class BaseUserCreate(CreateUpdateDictModel):
+@@ -44,11 +70,11 @@ class BaseUserCreate(CreateUpdateDictModel):
+ 
+ 
+ class BaseUserUpdate(CreateUpdateDictModel):
+-    password: Optional[str]
+-    email: Optional[EmailStr]
+-    is_active: Optional[bool]
+-    is_superuser: Optional[bool]
+-    is_verified: Optional[bool]
++    password: Optional[str] = None
++    email: Optional[EmailStr] = None
++    is_active: Optional[bool] = None
++    is_superuser: Optional[bool] = None
++    is_verified: Optional[bool] = None
+ 
+ 
+ U = TypeVar("U", bound=BaseUser)
+@@ -56,7 +82,7 @@ class BaseUserUpdate(CreateUpdateDictModel):
+ UU = TypeVar("UU", bound=BaseUserUpdate)
+ 
+ 
+-class BaseOAuthAccount(Generic[models.ID], BaseModel):
++class BaseOAuthAccount(BaseModel, Generic[models.ID]):
+     """Base OAuth account model."""
+ 
+     id: models.ID
+@@ -67,8 +93,12 @@ class BaseOAuthAccount(Generic[models.ID], BaseModel):
+     account_id: str
+     account_email: str
+ 
+-    class Config:
+-        orm_mode = True
++    if PYDANTIC_V2:  # pragma: no cover
++        model_config = ConfigDict(from_attributes=True)  # type: ignore
++    else:  # pragma: no cover
++
++        class Config:
++            orm_mode = True
+ 
+ 
+ class BaseOAuthAccountMixin(BaseModel):
+diff --git a/pyproject.toml b/pyproject.toml
+index b06a8a2e..cb21e80b 100644
+--- a/pyproject.toml
++++ b/pyproject.toml
+@@ -74,8 +74,6 @@ dependencies = [
+ ]
+ 
+ [tool.hatch.envs.default.scripts]
+-test = "pytest --cov=fastapi_users/ --cov-report=term-missing --cov-fail-under=100"
+-test-cov-xml = "pytest --cov=fastapi_users/ --cov-report=xml --cov-fail-under=100"
+ lint = [
+   "isort ./fastapi_users ./tests",
+   "isort ./docs/src -o fastapi_users",
+@@ -94,6 +92,21 @@ lint-check = [
+ ]
+ docs = "mkdocs serve"
+ 
++[tool.hatch.envs.test]
++
++[tool.hatch.envs.test.scripts]
++test = "pytest --cov=fastapi_users/ --cov-report=term-missing --cov-fail-under=100"
++test-cov-xml = "pytest --cov=fastapi_users/ --cov-report=xml --cov-fail-under=100"
++
++[[tool.hatch.envs.test.matrix]]
++pydantic = ["v1", "v2"]
++
++[tool.hatch.envs.test.overrides]
++matrix.pydantic.extra-dependencies = [
++  {value = "pydantic<2.0", if = ["v1"]},
++  {value = "pydantic>=2.0", if = ["v2"]},
++]
++
+ [tool.hatch.build.targets.sdist]
+ support-legacy = true  # Create setup.py
+ 
+diff --git a/tests/conftest.py b/tests/conftest.py
+index b3bcd4da..2ae43dc1 100644
+--- a/tests/conftest.py
++++ b/tests/conftest.py
+@@ -39,14 +39,14 @@
+ excalibur_password_hash = password_helper.hash("excalibur")
+ 
+ 
+-IDType = uuid.UUID
++IDType = UUID4
+ 
+ 
+ @dataclasses.dataclass
+ class UserModel(models.UserProtocol[IDType]):
+     email: str
+     hashed_password: str
+-    id: uuid.UUID = dataclasses.field(default_factory=uuid.uuid4)
++    id: IDType = dataclasses.field(default_factory=uuid.uuid4)
+     is_active: bool = True
+     is_superuser: bool = False
+     is_verified: bool = False
+@@ -59,7 +59,7 @@ class OAuthAccountModel(models.OAuthAccountProtocol[IDType]):
+     access_token: str
+     account_id: str
+     account_email: str
+-    id: uuid.UUID = dataclasses.field(default_factory=uuid.uuid4)
++    id: IDType = dataclasses.field(default_factory=uuid.uuid4)
+     expires_at: Optional[int] = None
+     refresh_token: Optional[str] = None
+ 
+@@ -70,15 +70,15 @@ class UserOAuthModel(UserModel):
+ 
+ 
+ class User(schemas.BaseUser[IDType]):
+-    first_name: Optional[str]
++    first_name: Optional[str] = None
+ 
+ 
+ class UserCreate(schemas.BaseUserCreate):
+-    first_name: Optional[str]
++    first_name: Optional[str] = None
+ 
+ 
+ class UserUpdate(schemas.BaseUserUpdate):
+-    first_name: Optional[str]
++    first_name: Optional[str] = None
+ 
+ 
+ class UserOAuth(User, schemas.BaseOAuthAccountMixin):
+diff --git a/tests/test_fastapi_users.py b/tests/test_fastapi_users.py
+index ab346e6a..c6797dc5 100644
+--- a/tests/test_fastapi_users.py
++++ b/tests/test_fastapi_users.py
+@@ -4,7 +4,7 @@
+ import pytest
+ from fastapi import Depends, FastAPI, status
+ 
+-from fastapi_users import FastAPIUsers
++from fastapi_users import FastAPIUsers, schemas
+ from tests.conftest import IDType, User, UserCreate, UserModel, UserUpdate
+ 
+ 
+@@ -77,7 +77,7 @@ def current_verified_superuser(
+     def optional_current_user(
+         user: Optional[UserModel] = Depends(fastapi_users.current_user(optional=True)),
+     ):
+-        return User.from_orm(user) if user else None
++        return schemas.model_validate(User, user) if user else None
+ 
+     @app.get("/optional-current-active-user")
+     def optional_current_active_user(
+@@ -85,7 +85,7 @@ def optional_current_active_user(
+             fastapi_users.current_user(optional=True, active=True)
+         ),
+     ):
+-        return User.from_orm(user) if user else None
++        return schemas.model_validate(User, user) if user else None
+ 
+     @app.get("/optional-current-verified-user")
+     def optional_current_verified_user(
+@@ -93,7 +93,7 @@ def optional_current_verified_user(
+             fastapi_users.current_user(optional=True, verified=True)
+         ),
+     ):
+-        return User.from_orm(user) if user else None
++        return schemas.model_validate(User, user) if user else None
+ 
+     @app.get("/optional-current-superuser")
+     def optional_current_superuser(
+@@ -101,7 +101,7 @@ def optional_current_superuser(
+             fastapi_users.current_user(optional=True, active=True, superuser=True)
+         ),
+     ):
+-        return User.from_orm(user) if user else None
++        return schemas.model_validate(User, user) if user else None
+ 
+     @app.get("/optional-current-verified-superuser")
+     def optional_current_verified_superuser(
+@@ -111,7 +111,7 @@ def optional_current_verified_superuser(
+             )
+         ),
+     ):
+-        return User.from_orm(user) if user else None
++        return schemas.model_validate(User, user) if user else None
+ 
+     async for client in get_test_client(app):
+         yield client
+diff --git a/tests/test_manager.py b/tests/test_manager.py
+index 4435d7a4..f8503a47 100644
+--- a/tests/test_manager.py
++++ b/tests/test_manager.py
+@@ -1,8 +1,8 @@
++import uuid
+ from typing import Callable
+ 
+ import pytest
+ from fastapi.security import OAuth2PasswordRequestForm
+-from pydantic import UUID4
+ from pytest_mock import MockerFixture
+ 
+ from fastapi_users.exceptions import (
+@@ -77,7 +77,7 @@ def _create_oauth2_password_request_form(username, password):
+ class TestGet:
+     async def test_not_existing_user(self, user_manager: UserManagerMock[UserModel]):
+         with pytest.raises(UserNotExists):
+-            await user_manager.get(UUID4("d35d213e-f3d8-4f08-954a-7e0d1bea286f"))
++            await user_manager.get(uuid.UUID("d35d213e-f3d8-4f08-954a-7e0d1bea286f"))
+ 
+     async def test_existing_user(
+         self, user_manager: UserManagerMock[UserModel], user: UserModel

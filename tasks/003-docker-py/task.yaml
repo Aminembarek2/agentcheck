@@ -1,0 +1,82 @@
+id: 003-docker-py
+repo: https://github.com/docker/docker-py
+base_sha: a02ba743338c27fd9348af2cf7767b140501734d
+package: urllib3
+from_version: "1.26"
+to_version: "2.x"
+python: "3.11"
+
+reference_pr: https://github.com/docker/docker-py/pull/3116
+reference_files:
+  - docker/transport/npipeconn.py
+  - docker/transport/sshconn.py
+  - docker/transport/ssladapter.py
+  - docker/transport/unixconn.py
+  - docker/types/daemon.py
+
+test_command: pytest tests/unit
+env: {}
+
+unreachable: []
+
+baseline: {passed: 576, failed: 0, skipped: 10}
+broken:   {passed: 575, failed: 1, skipped: 10}
+
+notes: |
+  A BINARY SMOKE TEST, not a measurement instrument. Exactly one test
+  fails, from one root cause, so progress takes the value 0 or 1 and
+  nothing in between. Kept because 001 and 002 are both hard and a
+  benchmark whose tasks sit at one difficulty cannot tell "did nothing"
+  from "did something"; report it as pass/fail and never average it with
+  the others.
+
+  urllib3 is pinned to 2.0.7 — the version current when the reference PR
+  merged — and NOT to a later 2.x. At 2.7.0 five tests fail instead of
+  one, which is a more attractive number, but they fail on a LATER
+  urllib3 regression that PR #3116 does not address: applying the
+  maintainer's own patch at 2.7.0 fixes nothing at all. A task whose
+  reference solution does not solve it measures nothing, however good the
+  failure count looks. tests/test_integration.py asserts this.
+
+  tests/integration deselected: it drives a real Docker daemon over a
+  socket, and the sandbox runs on an internal network with no route out.
+  tests/unit is fully mocked and needs nothing listening.
+
+  requests moves with urllib3 (2.28.1 -> 2.32.3) because requests before
+  2.30 caps urllib3 below 2.0, so the upgrade is not installable without
+  it. That is the situation the upstream PR addressed — its title is
+  "Make compatible with requests 2.29.0 and urllib3 2.0" — rather than a
+  second independent bump. urllib3 is the dependency under test.
+
+# --- validity metadata (phase 2) --------------------------------------------
+#
+# No local clone of docker-py, so the base commit date has not been read
+# from git and is left unset rather than estimated. Absent is never a
+# guess, here as elsewhere.
+
+contamination:
+  risk: medium
+  reason: |
+    The urllib3 1.26 -> 2.0 migration has an official guide, so the general
+    shape is well documented. But the specific breakage here is narrow and
+    much less discussed than the pydantic or SQLAlchemy cases: docker-py
+    passes `chunked=` to HTTPConnection.request(), which urllib3 2.0
+    removed, and the fix is local to one call site.
+
+    Rated medium rather than high because the failure is one obscure
+    keyword argument rather than a rename that appears in every tutorial —
+    and rather than low because docker-py is a large public repository and
+    the fixing PR is merged and linked.
+
+# One failing test from one cause. This is why 003 is a smoke test and not
+# a measurement: its progress is 0 or 1 with nothing in between, and a rate
+# over a single root cause carries no information about difficulty.
+root_causes:
+  - "TypeError: HTTPConnection.request() got an unexpected keyword argument 'chunked'"
+
+# One root cause, one failing test. This is a smoke test that the harness
+# end-to-end works, not a measurement of anything.
+low_power_reason: |
+  A single failing test from a single cause: progress is 0 or 1 with
+  nothing in between. Kept as an end-to-end smoke test and reported
+  separately; never pooled with the measuring tasks.

@@ -1,0 +1,74 @@
+id: 001-fastapi-users
+repo: https://github.com/fastapi-users/fastapi-users
+base_sha: 3bf0f888ee1847f52b8c5a96e30a1c90ea0f36e9
+package: pydantic
+from_version: "1.10"
+to_version: "2.x"
+python: "3.11"
+
+reference_pr: https://github.com/fastapi-users/fastapi-users/pull/1249
+reference_sha: 49ea718a6cabe53bf43edaae79eff2bfda7e0329
+reference_files:
+  - fastapi_users/schemas.py
+  - fastapi_users/router/oauth.py
+  - fastapi_users/router/register.py
+  - fastapi_users/router/users.py
+  - fastapi_users/router/verify.py
+  - fastapi_users/authentication/transport/bearer.py
+
+test_command: pytest tests/ --ignore=tests/test_authentication_strategy_redis.py
+env: {}
+unreachable: []
+
+# Counts below are checked against broken-report.json by
+# tests/test_tasks.py — they were transcribed by hand once and were
+# wrong by one in both fields until that test was written.
+baseline: {passed: 546, failed: 0}
+broken:   {passed: 456, failed: 90}
+
+notes: |
+  test_authentication_strategy_redis.py deselected: it drives a real Redis
+  server, and the sandbox runs on an internal network with no route out.
+  Coverage confirms the module is never executed under this command, so
+  nothing in it can be scored either way.
+
+  The pydantic 1.10 -> 2.x migration breaks 90 tests across several root
+  causes (from_orm/from_attributes, validator signatures, Config classes),
+  which makes this the task with the most cluster structure and the one
+  that separates models best.
+
+# --- validity metadata (phase 2) --------------------------------------------
+#
+# The date of the BASE commit, read from the clone with `git log -1`. Not the
+# PR merge date, which is not knowable from inside the container and is not
+# guessed at here: the base date is a verifiable lower bound and is what the
+# contamination judgement below actually rests on.
+base_sha_date: "2023-07-12"
+
+contamination:
+  risk: high
+  reason: |
+    The pydantic 1 -> 2 migration is the most heavily documented Python
+    library upgrade of 2023. It has an official migration guide, an
+    official `bump-pydantic` codemod, and the specific renames this task
+    turns on — .dict() -> .model_dump(), from_orm -> from_attributes — are
+    the examples used in that guide. The base commit predates every
+    current model's training cutoff by years, and fastapi-users is a
+    popular public repository whose merged PRs are in any code corpus.
+
+    So a model reproducing the maintainer's patch here may be recalling it
+    rather than deriving it, and this harness cannot tell those apart.
+    Results on this task are reported with that stated, and never averaged
+    with a lower-risk task without saying so. The probe in
+    docs/contamination.md tests the assumption rather than asserting it.
+
+# Distinct root causes in the broken state, from clustering the recorded
+# failing set by error message. 90 failing tests, five causes — so the
+# per-test denominator overstates this task's statistical power by roughly
+# 18x, and cluster_progress is the honest figure.
+root_causes:
+  - "status assertion: 200 = status.HTTP_200_OK"
+  - "PydanticUserError: from_attributes=True required for from_orm"
+  - "missing field (errors.pydantic.dev/2.13/v/missing)"
+  - "status assertion: 400 = status.HTTP_400_BAD_REQUEST"
+  - "status assertion: 201 = status.HTTP_201_CREATED"

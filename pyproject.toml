@@ -1,0 +1,112 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "agentcheck"
+version = "0.3.0"
+description = "Does a coding agent fix the upgrade, or just make the tests green?"
+requires-python = ">=3.10"
+dependencies = [
+    "pyyaml>=6.0",
+    "langchain-core>=0.3",
+    "langchain-anthropic>=0.3",
+    "langchain-openai>=0.2",
+    "langgraph>=0.2",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "ruff>=0.6", "mypy>=1.11", "matplotlib>=3.8"]
+# Tracing is optional at runtime and optional to install. The
+# harness must work, and every test must pass, without it.
+tracing = ["langfuse>=3.0"]
+
+[tool.setuptools]
+packages = ["agentcheck"]
+
+[tool.ruff]
+line-length = 79
+target-version = "py310"
+extend-exclude = ["target", "target002", "runs"]
+
+[tool.ruff.lint]
+# E/F      pyflakes and pycodestyle: the baseline.
+# I        import order, so a merge does not turn into an import argument.
+# UP       pyupgrade: this is a 3.10+ codebase and should read like one.
+# B        bugbear: mutable defaults, loop-variable binding — the class of
+#          bug that produces a plausible wrong number rather than a crash,
+#          which is the class this project exists to be careful about.
+# SIM      simplifications that reduce branches, hence reduce places a
+#          value can silently become something else.
+# RUF      ruff's own rules, notably mutable dataclass defaults.
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
+
+ignore = [
+    # Fires on FastAPI-style defaults this codebase does not use, and on
+    # `field(default_factory=...)` patterns that are correct here.
+    "B008",
+
+    # `l` is the house name for a line in a diff, used consistently across
+    # scorer.py and diffparse.py. The rule exists because `l` and `1` look
+    # alike in some fonts; renaming twenty-four comprehension variables in
+    # the two files that carry the cheat detectors would be a large
+    # mechanical diff through the most delicate code in the repository,
+    # for a readability gain of approximately zero. Deferred deliberately,
+    # not overlooked.
+    "E741",
+
+    # The output of this harness is read in a terminal and uses "·" as a
+    # separator and "—" in prose. Both are intentional and neither is a
+    # homoglyph attack.
+    "RUF001", "RUF002",
+
+    # Line length. The codebase is written to 79 and mostly holds it; the
+    # ~60 lines over are pre-existing, spread across every module, and
+    # reflowing them now would bury the phase-2 diff in whitespace. Same
+    # reasoning as mypy's gradual gate below: the rule that catches bug
+    # classes is on today, the cosmetic one follows.
+    "E501",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Scripts and tests put `sys.path.insert` before their imports so the
+# repository root is importable without installing `scripts` as a package.
+# That is the point of those lines, and it requires them to be first.
+"scripts/*" = ["E402"]
+"tests/*" = ["E402"]
+
+[tool.mypy]
+python_version = "3.10"
+files = ["agentcheck", "scripts"]
+# `scripts` joined on 2026-09-17. It was excluded while it was glue,
+# but it is now half the code a reader opens — and the 52 errors it
+# had included two real ones: a name that was an int in one branch
+# and a list in another, and Score|None dereferenced on paths that
+# had already filtered for a score. Both were the house bug shape.
+# Gradual on purpose. `disallow_untyped_defs` is the gate that matters:
+# new code must be annotated, and existing code gets annotated as it is
+# touched. Turning on full strict mode today would mean a large mechanical
+# diff that hides the real changes, and this repository's diffs are part
+# of what it is showing.
+disallow_untyped_defs = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+no_implicit_optional = true
+# The provider SDKs and langgraph ship partial or absent stubs; typing
+# their surface here would be typing someone else's API from guesswork.
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+# Scripts are entry points, not library code. Their pure helpers are
+# tested; annotating argparse plumbing buys nothing.
+module = "scripts.*"
+disallow_untyped_defs = false
+
+[[tool.mypy.overrides]]
+# numpy ships stubs written with 3.12 `type` statements, which the 3.10
+# target cannot parse — and parsing a third-party stub is not the check
+# this gate exists for. Skipping the follow keeps mypy checking THIS
+# package against 3.10, which is the interpreter the package claims.
+module = ["matplotlib.*", "numpy.*"]
+follow_imports = "skip"
+follow_imports_for_stubs = true

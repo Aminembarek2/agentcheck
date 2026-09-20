@@ -1,0 +1,135 @@
+name: ci
+
+# Two tiers, because the two kinds of test cost very different things.
+#
+# The fast suite is pure: scripted fake models, no containers, no API keys,
+# about six seconds. It runs on every push, and it is the gate.
+#
+# The container suite builds real images and runs real upstream test
+# suites, which takes roughly twenty minutes. It runs only on demand.
+# Among its tests is the one the README calls the one that matters
+# most — applying each task's reference patch must produce zero cheat
+# findings — and a detector regression there has to surface without anyone
+# remembering to look.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  fast:
+    name: lint, types, fast tests (py${{ matrix.python }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # The floor the package claims to support, and a current release.
+        # A codebase that only ever runs on one interpreter is a codebase
+        # whose `requires-python` is a guess.
+        python: ["3.10", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: no provider keys are visible to the fast suite
+        # Every fast test uses a scripted fake model. If a real key were
+        # present, a test that accidentally reached the network would pass
+        # here and fail for anyone without one — and would spend money on
+        # every push. Asserting the absence is cheaper than trusting it.
+        run: |
+          for var in ANTHROPIC_API_KEY OPENAI_API_KEY DEEPSEEK_API_KEY OPENROUTER_API_KEY; do
+            if [ -n "${!var:-}" ]; then
+              echo "$var is set in the fast job; it must not be" >&2
+              exit 1
+            fi
+          done
+
+      - name: ruff
+        run: ruff check .
+
+      - name: publication hygiene
+        run: python scripts/check_publication.py --history
+
+      # `ruff format --check` is deliberately NOT run. This codebase is
+      # hand-wrapped to 79 columns with comment blocks whose line breaks
+      # carry meaning, and reformatting it would produce a mechanical diff
+      # across every file — burying the changes a reader is meant to see in
+      # whitespace. The lint rules that catch bug classes are what matter
+      # and they are enforced above.
+
+      - name: mypy
+        run: mypy
+
+      - name: fast tests
+        run: pytest -m "not container" -q
+
+      - name: RESULTS.md matches the records
+        # Same idea as a formatter check: a generated document that has
+        # drifted from its data is worse than no document, because it
+        # still reads as current.
+        run: python scripts/report.py --check
+
+  containers:
+    name: container tests
+    # Never more than one at a time, and never alongside another job that
+    # starts harness containers. They all carry one owner label, so any
+    # reap filtered on it alone is global — a running sweep and a running
+    # suite will destroy each other's containers, and the victim records a
+    # harness failure it did not cause. Four separate symptoms traced back
+    # to this, each of which looked like flakiness first.
+    concurrency:
+      group: agentcheck-containers
+      cancel-in-progress: false
+    # Not on pull requests: twenty minutes of image builds per push would
+    # make the gate useless, and the fast suite already covers every pure
+    # module.
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: build task images
+        run: |
+          for task in tasks/*/; do
+            python scripts/prepare_task.py "$(basename "$task")" --build
+          done
+
+      - name: container tests
+        # Includes the reference-patch test: the maintainer's own diff must
+        # produce zero cheat findings on every task, and must fix
+        # something. A detector that flags upstream's work is wrong, and
+        # that test has caught it twice.
+        run: pytest -m container -q

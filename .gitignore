@@ -1,0 +1,51 @@
+target*/
+*.venv/
+__pycache__/
+*.pyc
+.DS_Store
+
+# Local credentials must never enter run evidence or the repository.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+credentials.json
+service-account*.json
+
+# runs/ is NOT ignored. The README requires every reported number to be
+# traceable to a specific run record, and a reviewer who cannot open the
+# record cannot check the number. The trajectories are ~200KB each and are
+# the evidence, not a build artifact. Only the container scratch below is
+# ignored.
+runs/**/*.tmp
+runs/**/*.partial
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+.claude/
+
+# Container scratch from prepare_task.py — pytest report.json and stdout
+# dumps, regenerated on every build. Not run records.
+tasks/*/runs/
+
+# The sweep's own bookkeeping, not a measurement: which cells are paid for,
+# and the lock that keeps two sweeps from racing over it. Rebuilt from the
+# records whenever it is missing.
+runs/.sweep-ledger.json
+runs/.sweep-ledger.json.lock
+
+# Derived from judge-labels.json for reading away from the terminal, 2.3MB
+# of diffs already in the records. Regenerate with:
+#   .venv/bin/python scripts/validate_judge.py sheet judge-labels.json
+judge-pairs.md
+
+# Local calibration diagnostics retain failed attempts without publishing
+# raw verdicts or mixing them with the registered measurement. The whole
+# directory is ignored, not just the one subpath: anything kept here is
+# deliberately outside the measurement.
+.local/

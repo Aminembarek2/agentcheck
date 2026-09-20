@@ -1,0 +1,70 @@
+id: 002-databases
+repo: https://github.com/encode/databases
+base_sha: c2e4c5ba9ba84e30d0b4676dee90cfb998b72a1d
+package: sqlalchemy
+from_version: "1.4"
+to_version: "2.x"
+python: "3.10"
+
+reference_pr: https://github.com/encode/databases/pull/540
+reference_files:
+  - databases/core.py
+  - databases/backends/common/records.py
+  - databases/backends/sqlite.py
+  - databases/backends/postgres.py
+  - databases/backends/mysql.py
+
+test_command: pytest tests/ --ignore=tests/test_connection_options.py
+env:
+  TEST_DATABASE_URLS: "sqlite:///testsuite,sqlite+aiosqlite:///testsuite"
+
+# Fallback reachability for when coverage.json has not been recorded.
+# Task 002 runs sqlite only, so every other backend is never executed.
+# Superseded by coverage.json when that exists — see prepare_task.py.
+unreachable:
+  - databases/backends/aiopg.py
+  - databases/backends/asyncmy.py
+  - databases/backends/mysql.py
+  - databases/backends/postgres.py
+
+baseline: {passed: 115, failed: 0, skipped: 8}
+broken:   {passed: 60, failed: 55, skipped: 8}
+notes: |
+  test_connection_options.py deselected: imports every backend at module
+  level, requiring asyncmy (Cython build) and psycopg2 to be installed.
+
+# --- validity metadata (phase 2) --------------------------------------------
+base_sha_date: "2023-11-28"
+
+contamination:
+  risk: high
+  reason: |
+    SQLAlchemy 2.0 shipped with an official "What's New" and a dedicated
+    1.4 -> 2.0 migration document, and the change this task turns on —
+    select([col]) losing its list form — is one of that document's headline
+    examples. encode/databases is a widely-used public repository and PR
+    540 is a merged, linked, discussed change.
+
+    The base commit is from November 2023, well before any current model's
+    cutoff. Treat a correct patch here as consistent with recall, not as
+    evidence against it.
+
+# Two root causes behind 55 failing tests: one Row API change accounts for
+# 53 of them. This is the task that makes the per-test denominator
+# misleading — its effective sample size is about two, not fifty-five, and
+# a per-test interval would be roughly five times too narrow.
+root_causes:
+  - "AttributeError: type object 'Row' has no attribute '_default_key_style'"
+  - "ArgumentError: select() no longer accepts a list of columns"
+
+# Two root causes, below the three a task needs to carry a measurement on
+# its own. Declared rather than discovered: 53 of the 55 failing tests come
+# from the single Row API change, so one correct edit moves almost the
+# whole suite and progress on this task is effectively three-valued
+# (nothing, the small cause, everything). Per-test intervals here are about
+# five times too narrow; cluster_progress over n=2 is the honest figure and
+# it is a very coarse one.
+low_power_reason: |
+  53 of 55 failing tests share one root cause, so per-test progress has an
+  effective sample size of about two. Report cluster progress, and do not
+  quote a per-test interval for this task.
